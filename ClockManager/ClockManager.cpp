@@ -1,4 +1,4 @@
-// ClockManager.cpp : ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
+// ClockManager.cpp : å®šä¹‰æ§åˆ¶å°åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
 //
 
 #include "stdafx.h"
@@ -8,14 +8,14 @@
 
 #include "managercode/TimeWheel.h"
 
-// ²âÊÔÓÃµÄ¶¨Ê±ÊÂ¼şº¯Êı
+// æµ‹è¯•ç”¨çš„å®šæ—¶äº‹ä»¶å‡½æ•°
 void timer_func(unsigned long para)
 {
 	static int iTimes = 0;
 	std::cout << "timer_func execute times: " << ++iTimes << std::endl;
 }
 
-// Êµ¼ÊÔËĞĞ¶¨Ê±¹ÜÀíÇøµÄÏß³ÌµÄÈë¿Úº¯Êı
+// å®é™…è¿è¡Œå®šæ—¶ç®¡ç†åŒºçš„çº¿ç¨‹çš„å…¥å£å‡½æ•°
 void thread_func(CTimeWheel &timewheel, timer_event &timerevent)
 {
 	timewheel.addTimer(timerevent);
@@ -29,16 +29,16 @@ int main(int argc, char* argv[])
 	timer_event timerevent;
 	timerevent.eType = eTimer_circle | eTimer2;
 	timerevent.interval = 500;
-	timerevent.pFun = timer_func;
+    timerevent.pFun = (void *)timer_func;
 
-	// ¿ªÆôÁíÍâÒ»¸öÏß³ÌÈ¥ÔËĞĞ¶¨Ê±Æ÷
+	// å¼€å¯å¦å¤–ä¸€ä¸ªçº¿ç¨‹å»è¿è¡Œå®šæ—¶å™¨
 	std::thread t(&thread_func, std::ref(*pTimewheel), std::ref(timerevent));
-	std::cout << "Ê±¼äÂÖ¼ÆÊ±Æ÷ÒÑ¿ªÆô" << std::endl; // Êµ¼ÊÕâ¾ä»°ºÜ¿ÉÄÜÔÚ¶¨Ê±Æ÷ÒÑ¾­¿ªÆôÒ»¶ÎÊ±¼äºó²ÅÖ´ĞĞ
+	std::cout << "æ—¶é—´è½®è®¡æ—¶å™¨å·²å¼€å¯" << std::endl; // å®é™…è¿™å¥è¯å¾ˆå¯èƒ½åœ¨å®šæ—¶å™¨å·²ç»å¼€å¯ä¸€æ®µæ—¶é—´åæ‰æ‰§è¡Œ
 
-	// ÏÂÃæÕâ¾ä×¢ÊÍµÄ´úÂë¿ÉÒÔ×ö²âÊÔÓÃ£¬´òÓ¡Ê±¼ä
+	// ä¸‹é¢è¿™å¥æ³¨é‡Šçš„ä»£ç å¯ä»¥åšæµ‹è¯•ç”¨ï¼Œæ‰“å°æ—¶é—´
 	//boost::progress_timer t;
 	{
-		// Ö÷Ïß³ÌĞİÃß100000ms
+		// ä¸»çº¿ç¨‹ä¼‘çœ 100000ms
 		boost::asio::io_service io;
 		boost::asio::deadline_timer timer(io, boost::posix_time::millisec(100000));
 		timer.wait();
