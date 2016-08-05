@@ -47,6 +47,7 @@ const int defaultSize = 8;
 // •         struct notifier_block ：通知链中的元素，记录了当发出通知时，应该执行的操作（即回调函数）
 //
 
+// 定时器
 struct timer_node
 {
 	int etype; // 定时器类型
@@ -57,6 +58,7 @@ struct timer_node
 };
 
 
+// 定时器管理表盘
 class CircQueue
 {
 public:
@@ -66,12 +68,14 @@ public:
 		, timeslot_(96)
 		, running_(true)
 	{
+		// 构造循环队列
 		if (sz >= 0)
 		{
 			maxTimers_ = sz;
 			elements = new threadsafe_list<timer_node>*[maxTimers_];
 		}
 
+		// 生成循环队列的每个元素
 		for (size_t i = 0; i < maxTimers_; i++)
 		{
 			elements[i] = new threadsafe_list<timer_node>;
@@ -101,13 +105,19 @@ public:
 	void timerStop();
 
 private:
-	threadsafe_list<timer_node> **elements;    //存放队列元素的队列数组
-	int maxTimers_;    // 队列最大可容纳元素个数
+	// 存放循环队列元素的队列数组
+	threadsafe_list<timer_node> **elements;    
+    // 循环队列最大可容纳元素个数
+	int maxTimers_;    
 
+	// 时间槽指针
 	int currentSlot_;
-	int timeslot_; // 时间片
+	// 时间片
+	int timeslot_; 
+
 	std::atomic<bool> running_;
 
+	// 线程池，用来运行定时器事件
 	ThreadPool thread_pool_;
 };
 
