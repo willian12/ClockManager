@@ -85,7 +85,6 @@ public:
 	};        
 	virtual ~CircQueue() //析构函数
 	{
-		cout << "$ 执行析构函数" << endl;
 		for (size_t i = 0; i < maxTimers_; i++)
 		{
 			delete elements[i];
