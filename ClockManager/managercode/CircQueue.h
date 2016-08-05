@@ -21,33 +21,13 @@
 
 using namespace std;
 
+// 表盘的大小
 const int defaultSize = 8;
+// 默认情况下时钟时间片的大小，这里其实是设置时钟频度为100ms，但是
+// 考虑到指令本身也需要执行时间，所以设为96
+const int defaultTimeSlot = 96;
 
-
-// 在时钟处理这部分中，内核用到了所谓的“通知链（ notification chain ）”技术。所以在介绍时钟处理过
-// 程之前先来了解下“通知链”技术。
-// 在 Linux 内核中，各个子系统之间有很强的相互关系，一些被一个子系统生成或者被探测到的事件，很可能是
-// 另一个或者多个子系统感兴趣的，也就是说这个事件的获取者必须能够通知所有对该事件感兴趣的子系统，并
-// 且还需要这种通知机制具有一定的通用性。基于这些， Linux 内核引入了“通知链”技术。
-//
-// 2.2.1 数据结构：
-// 通知链有四种类型，
-// 1.原子通知链（ Atomic notifier chains ）：通知链元素的回调函数（当事件发生时要执行的函数）只能在
-// 中断上下文中运行，不允许阻塞
-// 2.可阻塞通知链（ Blocking notifier chains ）：通知链元素的回调函数在进程上下文中运行，允许阻塞
-// 3.原始通知链（ Raw notifier chains ）：对通知链元素的回调函数没有任何限制，所有锁和保护机制都由
-// +调用者维护
-// 4.SRCU 通知链（ SRCU notifier chains ）：可阻塞通知链的一种变体
-// 所以对应了四种通知链头结构：
-// •         struct atomic_notifier_head ：原子通知链的链头
-// •         struct blocking_notifier_head ：可阻塞通知链的链头
-// •         struct raw_notifier_head ：原始通知链的链头
-// •         struct srcu_notifier_head ： SRCU 通知链的链头
-// 通知链元素的类型：
-// •         struct notifier_block ：通知链中的元素，记录了当发出通知时，应该执行的操作（即回调函数）
-//
-
-// 定时器
+// 定时器事件结点
 struct timer_node
 {
 	int etype; // 定时器类型
@@ -65,7 +45,7 @@ public:
 	CircQueue(int iPoolThreadNum = 10, int sz = defaultSize) //构造函数
 		: thread_pool_(iPoolThreadNum)
 		, currentSlot_(0)
-		, timeslot_(96)
+		, timeslot_(defaultTimeSlot)
 		, running_(true)
 	{
 		// 构造循环队列
@@ -96,22 +76,29 @@ public:
 	};                  
 public:
 	//virtual int getSize() const;            //计算队列中元素个数
-
+	// 添加一个定时事件
 	int addTimer(timer_event &timer);
+
+	// 删除一个定时事件
 	bool delete_timer(timer_event &times);
+
 	bool scanTimer(timer_event &times);
+
+	// 开始计时
 	void timerTick();
+
+	// 停止计时
 	void timerStop();
 
 private:
 	// 存放循环队列元素的队列数组
 	threadsafe_list<timer_node> **elements;    
     // 循环队列最大可容纳元素个数
-	int maxTimers_;    
+	size_t maxTimers_;
 
-	// 时间槽指针
+	// 时间槽指针(也就是时钟指针)
 	int currentSlot_;
-	// 时间片
+	// 时间片，隔多久跳一次
 	int timeslot_; 
 
 	std::atomic<bool> running_;
@@ -167,17 +154,19 @@ inline
 void CircQueue::timerTick()
 {
 	std::list<timer_node> node_list_tmp;
+
 	while (running_.load())
 	{
 		// 先判断链表上的结点是否要执行
 		//boost::progress_timer t;
+		// 等待100毫秒
 		{
 			boost::asio::io_service io;
 			boost::asio::deadline_timer timer(io, boost::posix_time::millisec(timeslot_));
 			timer.wait();
 		}
 
-
+		// 触发定时器事件
 		elements[currentSlot_]->for_each([&](timer_node &node) {
 			// 2. 如果结点的环数等于0，则触发定时器事件
 			if (0 == node.round)
@@ -193,24 +182,31 @@ void CircQueue::timerTick()
 
 		// 删去已触发的定时器事件
 		elements[currentSlot_]->remove_if([&, this](timer_node &node) {
-
+			// 如果定时事件类型是循环定时器，则重新插入计时器
+			// 这里需要预先对循环定时器进行计算
 			if (eTimer_circle & node.etype && 0 > node.round)
 			{
+				// 计算间隔总滴答数
 				int ticks = node.interval / timeslot_;
 				timer_node tmp_node = node;
+				// 计算定时事件的时间槽
 				tmp_node.slotNum = (currentSlot_ + (ticks % maxTimers_)) % maxTimers_;
+				// 计算时钟周期
 				tmp_node.round = ticks / maxTimers_;
+
 				node_list_tmp.push_back(tmp_node);
 			}
 
 			return 0 > node.round;
 		});
 
+		// 如果定时事件类型是循环定时器，则重新插入计时器
 		for (auto it = node_list_tmp.begin(); it != node_list_tmp.end(); it++)
 		{
 			elements[it->slotNum]->push_front(*it);
 		}
 
+		//完成本次计时后清空链表
 		node_list_tmp.clear();
 		
 
@@ -224,6 +220,7 @@ inline void CircQueue::timerStop()
 	running_.store(false);
 }
 
+// 删除指定计时器
 inline
 bool CircQueue::delete_timer(timer_event &timer)
 {

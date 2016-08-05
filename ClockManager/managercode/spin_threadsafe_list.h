@@ -7,6 +7,7 @@
 
 #include "spinlock_mutex.h"
 
+// 循环定时器表盘上每个结点指向的链表
 template<typename T>
 class threadsafe_list
 {

@@ -20,6 +20,7 @@
 #include <queue>  
 #include <process.h>  
 
+// 循环定时器用来执行定时器事件的线程池
 class ThreadPool
 {
 public:
@@ -100,14 +101,12 @@ private:
 
 	void runInThread()
 	{
-		//printf("create id:%d\n", ::GetCurrentThreadId());
 		while (running_) {
 			Task task(getTask());
 			if (task) {
 				task();
 			}
 		}
-		//printf("thread id:%d\n", ::GetCurrentThreadId());
 	}
 
 	Task getTask()

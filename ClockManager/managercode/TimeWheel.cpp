@@ -6,6 +6,7 @@ CTimeWheel::CTimeWheel(int iPoolThreadNum)
 	: ring_queue_(new CircQueue(iPoolThreadNum))
 {
 }
+
 CTimeWheel::~CTimeWheel()
 {
 	if (NULL != ring_queue_)

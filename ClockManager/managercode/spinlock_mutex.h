@@ -7,6 +7,7 @@
 #include <atomic>
 
 
+// 自旋锁，提高对定时管理器的访问性能
 class spinlock_mutex
 {
 	std::atomic_flag flag = ATOMIC_FLAG_INIT;
