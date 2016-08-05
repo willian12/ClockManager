@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
 	// 开启另外一个线程去运行定时器
 	std::thread t(&thread_func, std::ref(*pTimewheel), std::ref(timerevent));
-	std::cout << "时间轮计时器已开启" << std::endl; // 实际这句话很可能在定时器已经开启一段时间后才执行
+	std::cout << "Timer Manager Being!" << std::endl; // 实际这句话很可能在定时器已经开启一段时间后才执行
 
 	// 下面这句注释的代码可以做测试用，打印时间
 	//boost::progress_timer t;
