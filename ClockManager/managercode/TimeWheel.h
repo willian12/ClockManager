@@ -17,7 +17,7 @@ enum eTimerType
 {
 	// 可循环使用的时钟
 	eTimer_circle = 0x01,
-	eTimer2 = 0x02,
+	eTimer_unique = 0x02,
 	eTimer3,
 	eTimer4
 };

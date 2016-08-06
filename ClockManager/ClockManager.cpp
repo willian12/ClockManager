@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	std::unique_ptr<CTimeWheel> pTimewheel(new CTimeWheel(8));
 
 	timer_event timerevent;
-	timerevent.eType = eTimer_circle | eTimer2;
+	timerevent.eType = eTimer_circle/* | eTimer2*/;
 	timerevent.interval = 500;
 	timerevent.pFun = timer_func;
 

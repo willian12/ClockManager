@@ -116,6 +116,11 @@ private:
 inline 
 int CircQueue::addTimer(timer_event &timer)
 {
+	if (timer.eType & eTimer_unique)
+	{
+		delete_timer(timer);
+	}
+
 	timer_node node;
 	// 定时器类型
 	node.etype = timer.eType;
