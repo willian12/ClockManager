@@ -158,13 +158,10 @@
     <ClInclude Include="managercode\spin_threadsafe_list.h" />
     <ClInclude Include="managercode\ThreadPool.h" />
     <ClInclude Include="managercode\TimeWheel.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClockManager.cpp" />
     <ClCompile Include="managercode\TimeWheel.cpp" />
-    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
